@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Havekalender – lågekalender</title>
+  <style>
+    :root{
+      --bg:#f4f1e8;
+      --fg:#23301f;
+      --door:#2f6b3a;
+      --doorfg:#fff;
+      --card:#fff;
+      --acc:#b5532b;
+      --mut:#5d6a58;
+      box-sizing:border-box;
+      padding-top:env(safe-area-inset-top,0px);
+      padding-bottom:env(safe-area-inset-bottom,0px);
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root:not([data-theme="light"]){
+        --bg:#161c14;
+        --fg:#e8eddf;
+        --door:#3c7d48;
+        --card:#1f281c;
+        --acc:#e08a5c;
+        --mut:#a3b19b;
+      }
+    }
+
+    :root[data-theme="dark"]{
+      --bg:#161c14;
+      --fg:#e8eddf;
+      --door:#3c7d48;
+      --card:#1f281c;
+      --acc:#e08a5c;
+      --mut:#a3b19b;
+    }
+
+    html{
+      scroll-padding-top:env(safe-area-inset-top,0px);
+    }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--fg);
+      font:16px/1.5 Georgia, serif;
+      padding:12px;
+    }
+
+    h1{
+      text-align:center;
+      margin:8px 0 2px;
+    }
+
+    .sub{
+      text-align:center;
+      color:var(--mut);
+      font-size:14px;
+      margin:0 0 14px;
+    }
+
+    .g{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(96px,1fr));
+      gap:10px;
+      max-width:760px;
+      margin:0 auto;
+    }
+
+    .d{
+      aspect-ratio:1;
+      border:3px solid var(--bg);
+      border-radius:10px;
+      background:var(--door);
+      color:var(--doorfg);
+      font:bold 15px Georgia, serif;
+      cursor:pointer;
+      box-shadow:0 2px 6px rgba(0,0,0,.2);
+    }
+
+    .d small{
+      display:block;
+      font-weight:normal;
+      font-size:12px;
+      opacity:.85;
+    }
+
+    .d.on{
+      outline:3px solid var(--acc);
+    }
+
+    .d.now{
+      background:var(--acc);
+    }
+
+    #p{
+      max-width:760px;
+      margin:14px auto;
+      background:var(--card);
+      border-radius:12px;
+      padding:14px 16px;
+      box-shadow:0 2px 8px rgba(0,0,0,.12);
+    }
+
+    #p h2{
+      margin:0 0 6px;
+    }
+
+    #p h3{
+      margin:12px 0 2px;
+      font-size:15px;
+      color:var(--acc);
+    }
+
+    #p p{
+      margin:0;
+    }
+
+    .n{
+      margin-top:12px;
+      padding:8px 10px;
+      border-left:4px solid var(--door);
+      background:var(--bg);
+    }
+
+    .f{
+      max-width:760px;
+      margin:10px auto;
+      color:var(--mut);
+      font-size:13px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Havekalender</h1>
+  <p class="sub">Tryk på månedens låge. Datoer følger temperaturen: kommer frosten tidligt, rykkes opgaverne frem.</p>
+
+  <div class="g" id="g"></div>
+  <div id="p"></div>
+
+  <p class="f">Bygger bl.a. på Claus Dalbys månedsgøremål, gartnerpraksis og engelsk havelitteratur; tilpasset have og orangeri nær Limfjorden (fugtig jord, vind). Alle nævnte sider er ikke gennemgået.</p>
+
+  <script>
+    const L = [
+      "1. Vigtigst",
+      "2. Tilrådeligt",
+      "3. Størst succes",
+      "4. Undgå",
+      "5. Nye ideer",
+      "6. Opskrift fra haven"
+    ];
+
+    const M = [
+      ["Januar",
+        [
+          "Tjek orangeriets temperatur (oliven, daddelpalme, banan og citrus: ca. 3–8 °C) og luft ud på milde dage mod grå skimmel. Ryst tung sne af hæk og stedsegrønne.",
+          "Se til georgin-knolde, pelargonier og kasser i garagen: skrumper de, så brug en forstøver; er de våde, så lad dem tørre. Beskær vin, æble og pære i frostfrit vejr. Bestil frø.",
+          "Vinterbeskæring af æble og pære. Så chili og peberfrugt indendørs ved lys og ca. 22 °C. Tag stiklinger af overvintrede pelargonier.",
+          "Beskær ikke fersken, kirsebær og sommerfuglebusk nu. Giv ingen gødning, og vand oliven og sukkulenter kun sparsomt. Gå ikke på frossen eller vandmættet plæne.",
+          "Dyrk karse og ærteskud i vindueskarmen. Planlæg en fugtig blomstereng med mjødurt, engkarse, kær-ranunkel og sumpiris.",
+          "Ovnbagte rodfrugter (pastinak, gulerod, persillerod, løg) med friskklippet purløg fra potte."
+        ],
+        "Fugtigt: tjek drænrender og grøfter, og gå ikke på mættet jord. Storm: efterse espalier, bindinger og ruder."
+      ],
+      ["Februar",
+        [
+          "Færdigbeskær vin, før saften stiger (ellers 'bløder' den). Dæk ferskentræet med tag eller plast før knopperne svulmer: regn spreder kruselsyge. Klip efterårshindbær ned til jorden.",
+          "Beskær ribs, solbær og stikkelsbær, og fjern de ældste grene. Rens fuglekasser. Start georgin-knolde lyst og køligt, hvis du vil tage stiklinger.",
+          "Så tomat, aubergine og chili 10–12 uger før udplantning, helst med kunstlys. Pod frugttræer. Så stedmoder, lobelia og begonia indendørs.",
+          "Hård beskæring af jasmin og forsythia (blomstrer på sidste års skud). Ingen udplantning. Undgå at holde spirer for varmt og mørkt, så bliver de lange og tynde.",
+          "Sæt læggekartofler til forspiring i lyst, køligt rum. Så sommerfuglebusk-frø til forårsplantning.",
+          "Kompot eller gelé af frosne ribs og hindbær fra egen have."
+        ],
+        "Orangeri: start langsom vanding af oliven og daddelpalme først når de viser nyt græsgrønt. Tjek for lopper/bladlus på overvintrede planter."
+      ],
+      ["Marts",
+        [
+          "Beskær roser, når forsythia blomstrer: ned til 20–30 cm, over et udadvendt øje. Klip sommerfuglebusk ned til 20–30 cm. Begynd at samle dræbersnegle om aftenen og efter regn.",
+          "Slå og riv plænen ved tørvejr. Plant ribs, hindbær og blåbær (blåbær kræver sur jord, pH 4–5, og regnvand). Del purløg og stauder. Sæt ærter ud under klokke.",
+          "Så ærter, spinat, radiser og persille. Stiklinger af fuchsia fra overvintrede planter. Forspir tomat, og så morgenfrue indendørs.",
+          "Ingen udplantning af tomat, agurk og basilikum. Grav ikke i våd jord. Giv ikke gødning, før jorden er frostfri og tør.",
+          "Så solsikker og morgenfruer i potter indendørs. Plant en tør plet med lavendel, stenurt og kattehale.",
+          "Purløgssmør og persillesmør af første friske klip."
+        ],
+        "Fugtigt: sæt sneglehegn om salat og ærter. Vind: bind nyplantede træer til pæle. Orangeri: luft kraftigt på solskinsdage."
+      ],
+      ["April",
+        [
+          "Første gødning af plænen. Høst ramsløg før blomstring. Dæk blomstrende frugttræer (æble, pære, fersken, kirsebær) med fiberdug ved nattefrost. Bring fuchsia, oliven og daddelpalme ud i lyset om dagen, men ind om natten under ca. 3 °C.",
+          "Rens dammen og del åkander sidst på måneden. Plant jordbær. Forspir majs i potter (3–4 uger). Pot georgin-knolde i orangeriet. Efterså slidte steder i plænen.",
+          "Så morgenfrue, solsikke, ærter, gulerod og dild udendørs. Ved jordtemp. 8–10 °C får plænefrø godt fat.",
+          "Klip ikke hæk i yngletiden (marts–august). Plant ikke frostfølsomt ud uden afhærdning. Undgå tung vanding af kolde potter.",
+          "Plant fresia-knolde i potter i orangeriet (blomstrer ca. juli). Prøv nye tørt-plet-blomster: perlekurv, bakkenelliker.",
+          "Ramsløgspesto på nyplukkede blade (olie, parmesan, nødder)."
+        ],
+        "Frost: fugt jorden dagen før kold nat, så holder den varmen bedre. Orangeri: bestøv ferskenblomster med en blød pensel."
+      ],
+      ["Maj",
+        [
+          "Efter sidste nattefrost (ca. 10.–15. maj, tjek prognosen): plant tomat, agurk, majs, basilikum, georgin og sød kartoffel (lilla blade) ud efter 1 uges afhærdning. Hold øje med snegle.",
+          "Flyt oliven, daddelpalme, banan og ananas udenfor, når nætterne er over 8–10 °C. Støt ærter. Vand og gød krukker. Fjern overflødige frugtanlæg på fersken.",
+          "Så bønner, squash og solsikke direkte. Tag stiklinger af hortensia. Del åkander. Sæt tomater dybt, så rodder dannes langs stænglen.",
+          "Plant ikke tomat/agurk ud før frostfrit. Undgå overvanding i orangeri, og pas på middagsbrand: sæt skygge op.",
+          "Fugtig blomstereng: kær-ranunkel, mjødurt, engkarse, sumpiris. Tør plet: kattehale, stenurt, lavendel.",
+          "Rabarber-jordbærgrød."
+        ],
+        "Orangeri: skygge og ventilation fra nu. Fugtigt: sneglene er mest aktive efter regn, så saml dem tidligt om morgenen."
+      ],
+      ["Juni",
+        [
+          "Vand dybt og sæt skygge op i orangeriet. Bind tomater op og nip sideskud. Gød krukker ugentligt. Fjern visne roser og sommerblomster.",
+          "Tynd æble og pære (efter junifald). Slå plænen ugentligt, 4–5 cm høj (slidstærk plæne: 5–6 cm). Se efter bladlus og rosenrust. Støt sankthansurt.",
+          "Stiklinger af fuchsia, lavendel (bløde skud) og hortensia. Så sene ærter og sommerhvidkål.",
+          "Vand ikke midt på dagen eller på bladene. Lad ikke krukker tørre ud. Klip ikke hæk, hvis der er fuglereder.",
+          "Sæt toppen af en ananas i vand og pot i varm vindueskarm. Sæt bananpalmen i stor potte udenfor.",
+          "Persillepesto med ærtesalat og friske jordbær."
+        ],
+        "Orangeri: tjek for hvide fluer og rød spindemide, som elsker varme og tørhed."
+      ],
+      ["Juli",
+        [
+          "Høst dagligt: ærter, jordbær, ribs, hindbær og blåbær. Vand dybt. Fjern visne blomster på roser og georginer. Sommerklip kirsebær og fuglekirsebær (færre sygdomme end vinterklip).",
+          "Klip lavendel lige efter blomstring (kun det grønne, ikke ind i det gamle ved). Bind vin op og nip sideskud. Nip sideskud på agurk og tomat.",
+          "Stiklinger af roser, hortensia og buksbom. Så bellis og stedmoder til næste år. Så efterårsspinat sidst på måneden.",
+          "Ingen kraftig beskæring af æble og pære nu. Ingen kvælstofgødning. Vand ikke bladene, så undgår du meldug.",
+          "Så grønkål og pak choi til efteråret. Skær solsiker og georginer til buketter.",
+          "Ribsgelé: 1 kg ribs, ca. 700 g sukker."
+        ],
+        "Fugtigt: godt for hostaer og mjødurt, men kig efter snegle. Orangeri: dør og vinduer åbne dag og nat."
+      ],
+      ["August",
+        [
+          "Klip bøg- og ligusterhæk efter yngletiden. Plant nye jordbær på rodslåede udløbere. Høst løg, hvidløg og majs.",
+          "Sommerklip espalier-æble og -pære. Så plænefrø sidst på måneden. Tag stiklinger af pelargonier og fuchsia til overvintring. Klip lavendel, hvis det ikke er gjort.",
+          "Så og reparér plæne (varm jord og efterårsregn). Plant liljer så snart du får fat i løgene. Så vintersalat.",
+          "Ingen kvælstofgødning på træer og buske (blød, frostfølsom vækst). Ingen kraftig klipning i hedebølge.",
+          "Plant efterårskrokus, nerine og sedum til bier. Tynd vindrueklaser, så de resterende bliver større.",
+          "Tomat-basilikum-bruschetta med egne tomater."
+        ],
+        "Orangeri: høst tomater og agurker jævnligt, og luft ud mod gråskimmel. Snegle: tjek under potter."
+      ],
+      ["September",
+        [
+          "Saml dræbersnegle og deres æg (små hvide perler under potter og sten). Plant træer, buske, hæk og stauder nu. Høst æbler, pærer, majs og vindruer, når de er modne.",
+          "Efterårsgødning til plænen (kalium, lidt kvælstof). Bekæmp stankelbens- og oldenborrelarver, hvis plænen skades. Skær kanter. Fjern ukrudt, før det sætter frø. Rens drænrender og grøfter.",
+          "Plant træer og buske (varm jord og regn). Så plænefrø senest midt i september. Plant narcisser og krokus.",
+          "Ingen kvælstofgødning, ingen hård beskæring, ingen sene stiklinger.",
+          "Plant hvidløg (sept.–okt.). Plant salvie og lavendel, som sneglene lader være.",
+          "Æblegrød eller æblekage med kanel af egne æbler."
+        ],
+        "Fugtigt: nu begynder jorden at blive vandmættet. Sæt nye planter lidt højt, og læg fliser under potter. Storm: plukkede grene fra blæsten kan sprede svamp, så ryd op."
+      ],
+      ["Oktober",
+        [
+          "Efter første nattefrost (typisk midt i oktober): grav georginer op, klip ned, tør dem, og opbevar ved 5–10 °C med aviser over. Fuchsia, oliven, daddelpalme, banan, ananas og sød kartoffel ind, før det bliver under ca. 3–5 °C. Pelargonier: tag op, fjern ca. to tredjedele jord, klip ned og stil frostfrit.",
+          "Dæk hostaer og stauder i krukker med presenning mod vintervæde (lad vinden passere). Fjern løv fra plæne og dam. Rens drænrender og grøfter. Tjek vandstand i marken og mellem træerne.",
+          "Plant løg (krokus, narcis) og stauder. Klip stauder ned, så der er plads til forårsløg. Så favabønner og sneærter til overvintring. Tulipaner plantes sidst på måneden.",
+          "Opbevar ikke knolde vådt. Beskær ikke frugttræer i fugtigt vejr. Giv ingen gødning.",
+          "Fugtig eng: plant kær-vergissmejnot og mjødurt. Tør plet: stenurt og perlekurv.",
+          "Græskarsuppe af egne græskar med purløg."
+        ],
+        "Orangeri: sæt blæser/varmekabel klar, og tjek tætning og gutter. Fugtigt: grøfter fri for løv, så vandet kan løbe fra marken."
+      ],
+      ["November",
+        [
+          "Gør orangeriet vinterklar: rens glas, luft ud, giv vand sparsomt (sukkulenter næsten ingen). Dæk hortensia og figen mod frost. Plant tulipaner nu, mens jorden stadig er mild. Beskær ribs og stikkelsbær.",
+          "Plant barrodstræer, buske, roser og hæk, når jorden ikke er klæg. Sidste plæneklip. Sikr træer og espalier mod storm. Tjek vandstand i marken og mellem træer. Vask og olier redskaber.",
+          "Plant frugttræer og roser med bar rod. Sæt hvidløg. Del stauder.",
+          "Ingen gødning. Plant ikke i vandmættet jord, og lad ikke vand stå ved rødder.",
+          "Hyacint og amaryllis til jul: sæt løgene i potter og stil dem varmt og lyst, så blomstrer de til jul.",
+          "Æblechutney af egne æbler og løg."
+        ],
+        "Fugtigt: læg fliser eller sten under krukker, så de ikke står i vand. Vind: efterse lukkede ruder og døre i orangeriet."
+      ],
+      ["December",
+        [
+          "Tjek orangeriet for frost og stormskader. Fyr op ved hård frost. Fjern sne fra tag og stedsegrønne. Opbevar knolde tørt og frostfrit.",
+          "Beskær æble, pære og vin fra midten af måneden. Plant træer i frostfrit vejr. Fodr fuglene. Sæt stammebeskyttelse (net) mod mus og harer.",
+          "Vinterbeskæring af æble og pære. Orkidéer: lyst, 18–22 °C, vand ugentligt ved at dyppe potten. Guldranke og tvillingeranke: lyst og kun lidt vand. Julerose blomstrer.",
+          "Gå ikke på frossen plæne. Ingen vejsalt nær planter. Overvand ikke stueplanter, og hold dem væk fra radiatorer.",
+          "Dyrk mikrogrønt og karse i vindueskarmen. Spir hvidløgsskud.",
+          "Æbleskiver med hjemmelavet ribsgelé."
+        ],
+        "Fugtigt: undgå at betræde mættet jord. Storm: tjek bindinger og pæle. Orangeri: brug fyrfadslys eller termostat til frostbeskyttelse."
+      ]
+    ];
+
+    const g = document.getElementById("g");
+    const p = document.getElementById("p");
+    const now = new Date().getMonth();
+
+    M.forEach((m, i) => {
+      const b = document.createElement("button");
+      b.className = "d" + (i === now ? " now" : "");
+      b.innerHTML = (i + 1) + "<small>" + m[0] + "</small>";
+      b.onclick = () => show(i);
+      g.appendChild(b);
+    });
+
+    function show(i) {
+      [...g.children].forEach((b, j) => {
+        b.classList.toggle("on", i === j);
+      });
+
+      const m = M[i];
+      p.innerHTML =
+        "<h2>" + m[0] + "</h2>" +
+        m[1].map((t, k) => "<h3>" + L[k] + "</h3><p>" + t + "</p>").join("") +
+        "<div class='n'><b>Orangeri, fugtig have og storm:</b> " + m[2] + "</div>";
+
+      p.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    show(now);
+  </script>
+</body>
+</html>
